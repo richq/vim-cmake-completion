@@ -20,7 +20,7 @@
 " distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 " WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 " License for the specific language governing permissions and limitations under
-" the License. 
+" the License.
 """
 if exists('did_cmakecomplete') || &cp || version < 700
   finish
@@ -49,14 +49,24 @@ function cmakecomplete#Help(...)
   let output = ""
   if a:0 == 1
     let arg = tolower(a:1)
-    for m in s:cmake_commands
-      if m['word'] == arg
-        let output = m['info']
+    let searchlist = [s:cmake_commands, s:cmake_properties, s:cmake_modules, s:cmake_variables]
+    for sl in searchlist
+      for m in sl
+        if m['word'] == arg
+          let output = m['info']
+          break
+        endif
+      endfor
+      if output != ""
         break
       endif
     endfor
   else
     let output = system('cmake --help-full')
+  endif
+  if output == ""
+    echoerr "No help found for that"
+    return
   endif
   pc
   exec "above ". winheight(0) / 3 . " split"

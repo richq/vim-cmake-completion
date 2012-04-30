@@ -3,7 +3,7 @@
 " License:     Apache License 2.0
 "
 " To install cmake completion, copy the contents of this file to
-"   $HOME/.vim/plugin/cmake.vim
+"   $HOME/.vim/plugin/cmakecomplete.vim
 " And the associated autoload file to:
 "   $HOME/.vim/autoload/cmakecomplete.vim
 "
@@ -22,9 +22,17 @@
 " License for the specific language governing permissions and limitations under
 " the License.
 """
-if exists('did_cmake') || &cp || version < 700
+if exists('did_cmakecomplete') || &cp || version < 700
     finish
 endif
-let did_cmake = 1
+let did_cmakecomplete = 1
 command -nargs=* -complete=customlist,cmakecomplete#HelpComplete  CMakeHelp call cmakecomplete#Help(<f-args>)
 autocmd FileType cmake set omnifunc=cmakecomplete#Complete
+
+if !exists('g:cmake_map_keys')
+    let g:cmake_map_keys = 1
+endif
+
+if g:cmake_map_keys
+    autocmd FileType cmake nnoremap <silent> <buffer> K :call cmakecomplete#Help(expand("<cword>"))<CR>
+endif
