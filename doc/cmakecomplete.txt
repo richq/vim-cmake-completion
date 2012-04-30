@@ -1,0 +1,48 @@
+*cmakecomplete.txt* Vim plugin for CMake omnicompletion
+*cmakecomplete*
+
+==============================================================================
+
+1. Overview                                     |cmakecomplete-overview|
+2. Installation                                 |cmakecomplete-installation|
+
+==============================================================================
+1. Overview
+                                                *cmakecomplete-overview*
+The purpose of this script is to provide an 'omnifunc' function for the CMake
+scripting language. In a CMake file you can use |i_CTRL-X_CTRL-O| to complete
+command names and attributes within commands.
+
+                                                *g:cmake_map_keys*
+Also the |K| key is mapped to lookup the help on the current word under the
+cursor. This can be avoided by setting 'g:cmake_map_keys'
+
+==============================================================================
+
+2. Installation
+                                                *cmakecomplete-installation*
+2.1. Script installation
+
+Unzip the downloaded file in your personal |vimfiles| directory (~/.vim under 
+unix or %HOMEPATH%\vimfiles under windows). The 'omnifunc' option will be 
+automatically set for CMake files.
+
+You also have to enable plugins by adding these two lines in your|.vimrc|file: >
+
+        set nocp
+        filetype plugin on
+<
+Please see |cp| and |filetype-plugin-on| sections for more details.
+
+The script assumes the cmake binary is in your $PATH and will use it to
+generate the help.
+
+2.2. Files
+
+After installation you should have these files:
+
+    autoload/cmakecomplete.vim
+    plugin/cmakecomplete.vim
+    doc/cmakecomplete.txt
+
+==============================================================================
