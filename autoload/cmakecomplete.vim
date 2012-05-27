@@ -22,10 +22,11 @@
 " License for the specific language governing permissions and limitations under
 " the License.
 """
-if exists('did_cmakecomplete') || &cp || version < 700
+if version < 700
   finish
 endif
-let did_cmakecomplete = 1
+let s:keepcpo= &cpo
+set cpo&vim
 
 " this is the list of potential completions
 let s:cmake_commands = []
@@ -300,3 +301,6 @@ call cmakecomplete#Init('commands', s:cmake_commands, 1)
 call cmakecomplete#Init('properties', s:cmake_properties, 0)
 call cmakecomplete#Init('modules', s:cmake_modules, 1)
 call cmakecomplete#Init('variables', s:cmake_variables, 1)
+
+let &cpo = s:keepcpo
+unlet s:keepcpo
