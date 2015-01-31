@@ -26,7 +26,7 @@ if exists('did_cmakecomplete') || &cp || version < 700
     finish
 endif
 let did_cmakecomplete = 1
-command -nargs=* -complete=customlist,cmakecomplete#HelpComplete  CMakeHelp call cmakecomplete#Help(<f-args>)
+command! -nargs=* -complete=customlist,cmakecomplete#HelpComplete  CMakeHelp call cmakecomplete#Help(<f-args>)
 autocmd FileType cmake set omnifunc=cmakecomplete#Complete
 
 if !exists('g:cmake_map_keys')
