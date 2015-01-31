@@ -28,6 +28,7 @@ endif
 let did_cmakecomplete = 1
 command! -nargs=* -complete=customlist,cmakecomplete#HelpComplete  CMakeHelp call cmakecomplete#Help(<f-args>)
 autocmd FileType cmake set omnifunc=cmakecomplete#Complete
+autocmd FileType cmake setlocal completeopt+=preview
 
 if !exists('g:cmake_map_keys')
     let g:cmake_map_keys = 1
