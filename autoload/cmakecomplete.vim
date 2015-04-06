@@ -96,6 +96,64 @@ function cmakecomplete#PrintExamples()
   echo s:cmake_command_examples
 endfunc
 
+function cmakecomplete#Version()
+  let output = system('cmake --version')
+  for c in split(output, '\n')
+    if c =~ 'version'
+      let components = split(c, ' ')
+      return components[len(components) - 1]
+    endif
+  endfor
+endfunc
+
+function cmakecomplete#Init3(help, list, ignore_case)
+  " parse the help to get completions
+  let oldic = &ignorecase
+  set noignorecase
+  let output = system('cmake --help-' . a:help)
+  let word = ''
+  let info = []
+  let in_example = 0
+  let last_line = ''
+  for c in split(output, '\n')
+    " CMake commands now have a line of dashes after them...
+    if c =~ '^-\+$'
+      if word != ''
+        call cmakecomplete#AddWord(word, join(info[0:len(info) - 3], ''), a:list, a:ignore_case)
+      endif
+      let info = [last_line, "\n", c]
+      let word = substitute(last_line, '^\s\+', '', 'g')
+      let last_line = c
+    else
+      let last_line = c
+      " if we have a command, then the rest is the help
+      if word != ''
+        " extract examples...
+        if in_example == 0 && a:help == 'commands' && c =~ '^\s' . word
+          let in_example = 1
+          let example = substitute(c, '\W', ' ', 'g')
+        elseif in_example == 1
+          if c =~ '^\s*$'
+            if !has_key(s:cmake_command_examples, word)
+              let s:cmake_command_examples[word] = ''
+            endif
+            let s:cmake_command_examples[word] = s:cmake_command_examples[word] . ' ' . example
+            let in_example = 0
+          else
+            let example = example . " " . substitute(c, '\W', ' ', 'g')
+          endif
+        endif
+        let info += [c, "\n"]
+      endif
+    endif
+  endfor
+  " add the last command to the list
+  if word != ''
+    call cmakecomplete#AddWord(word, join(info[0: len(info) - 3], ''), a:list, a:ignore_case)
+  endif
+  let &ignorecase = oldic
+endfunction
+
 function cmakecomplete#Init(help, list, ignore_case)
   " parse the help to get completions
   let oldic = &ignorecase
@@ -297,10 +355,17 @@ function cmakecomplete#HelpComplete(ArgLead, CmdLine, CursorPos)
   return result
 endfunction
 
+if cmakecomplete#Version() =~ "^2\."
 call cmakecomplete#Init('commands', s:cmake_commands, 1)
 call cmakecomplete#Init('properties', s:cmake_properties, 0)
 call cmakecomplete#Init('modules', s:cmake_modules, 1)
 call cmakecomplete#Init('variables', s:cmake_variables, 1)
+else
+call cmakecomplete#Init3('commands', s:cmake_commands, 1)
+call cmakecomplete#Init3('properties', s:cmake_properties, 0)
+call cmakecomplete#Init3('modules', s:cmake_modules, 1)
+call cmakecomplete#Init3('variables', s:cmake_variables, 1)
+endif
 
 let &cpo = s:keepcpo
 unlet s:keepcpo
