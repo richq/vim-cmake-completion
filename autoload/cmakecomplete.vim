@@ -34,6 +34,7 @@ let s:cmake_properties = []
 let s:cmake_modules = []
 let s:cmake_variables = []
 let s:cmake_command_examples = {}
+let s:cmake_major_version = 0
 
 function s:createbuffer()
   let counter = 0
@@ -97,13 +98,14 @@ function cmakecomplete#PrintExamples()
 endfunc
 
 function cmakecomplete#Version()
-  let output = system('cmake --version')
-  for c in split(output, '\n')
-    if c =~ 'version'
-      let components = split(c, ' ')
-      return components[len(components) - 1]
-    endif
-  endfor
+  if s:cmake_major_version > 0
+    return s:cmake_major_version
+  else
+    let output = systemlist('cmake --version')
+    let version_number = split(output[0], ' ')[-1]
+    let s:cmake_major_version = split(version_number, '\.')[0]
+    return s:cmake_major_version
+  endif
 endfunc
 
 function cmakecomplete#Init3(help, list, ignore_case)
@@ -355,7 +357,7 @@ function cmakecomplete#HelpComplete(ArgLead, CmdLine, CursorPos)
   return result
 endfunction
 
-if cmakecomplete#Version() =~ "^2\."
+if cmakecomplete#Version() == 2
 call cmakecomplete#Init('commands', s:cmake_commands, 1)
 call cmakecomplete#Init('properties', s:cmake_properties, 0)
 call cmakecomplete#Init('modules', s:cmake_modules, 1)
