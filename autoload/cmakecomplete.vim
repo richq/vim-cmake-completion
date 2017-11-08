@@ -34,6 +34,7 @@ let s:cmake_properties = []
 let s:cmake_modules = []
 let s:cmake_variables = []
 let s:cmake_command_examples = {}
+let s:cmake_major_version = 0
 
 function s:createbuffer()
   let counter = 0
@@ -45,12 +46,27 @@ function s:createbuffer()
   return versionedName
 endfunction
 
+function! s:getCompletionList(listname)
+    if index(['commands', 'properties', 'variables', 'modules'], a:listname) == -1
+        return []
+    endif
+    let completion_list = get(s:, 'cmake_' . a:listname, [])
+    if empty(completion_list)
+        if cmakecomplete#Version() == 2
+          call cmakecomplete#Init(a:listname, completion_list, a:listname == 'properties' ? 0 : 1)
+        else
+          call cmakecomplete#Init3(a:listname, completion_list, a:listname == 'properties' ? 0 : 1)
+        endif
+    endif
+    return completion_list
+endfunction
+
 function cmakecomplete#Help(...)
   " create a new buffer and show all of cmake's help there
   let output = ""
   if a:0 == 1
     let arg = tolower(a:1)
-    let searchlist = [s:cmake_commands, s:cmake_properties, s:cmake_modules, s:cmake_variables]
+    let searchlist = [s:getCompletionList('commands'), s:getCompletionList('properties'), s:getCompletionList('modules'), s:getCompletionList('variables')]
     for sl in searchlist
       for m in sl
         if m['word'] == arg
@@ -97,13 +113,14 @@ function cmakecomplete#PrintExamples()
 endfunc
 
 function cmakecomplete#Version()
-  let output = system('cmake --version')
-  for c in split(output, '\n')
-    if c =~ 'version'
-      let components = split(c, ' ')
-      return components[len(components) - 1]
-    endif
-  endfor
+  if s:cmake_major_version > 0
+    return s:cmake_major_version
+  else
+    let output = systemlist('cmake --version')
+    let version_number = split(output[0], ' ')[-1]
+    let s:cmake_major_version = split(version_number, '\.')[0]
+    return s:cmake_major_version
+  endif
 endfunc
 
 function cmakecomplete#Init3(help, list, ignore_case)
@@ -310,15 +327,15 @@ function! cmakecomplete#Complete(findstart, base)
   endif
 
   let res = []
-  let list = s:cmake_commands
+  let list = s:getCompletionList('commands')
   let match = '^' . tolower(a:base)
   if cmakecomplete#InVariable()
     let match = '^' . a:base
-    let list = s:cmake_variables
+    let list = s:getCompletionList('variables')
   elseif cmakecomplete#InInclude()
     " return modules
     let match = '^' . a:base
-    let list = s:cmake_modules
+    let list = s:getCompletionList('modules')
   elseif cmakecomplete#InFunction()
     " return completion variables
     let match = '^' . a:base
@@ -326,11 +343,11 @@ function! cmakecomplete#Complete(findstart, base)
     if has_key(s:cmake_command_examples, fname)
       let list = cmakecomplete#GetArguments(fname)
     else
-      let list = s:cmake_properties
+      let list = s:getCompletionList('properties')
     endif
     let prevword = cmakecomplete#PreviousWord()
     if prevword == "PROPERTIES"
-      let list = s:cmake_properties
+      let list = s:getCompletionList('properties')
     endif
   endif
   " return the completion words
@@ -346,7 +363,7 @@ endfunction
 function cmakecomplete#HelpComplete(ArgLead, CmdLine, CursorPos)
   let result = []
   let match = '^' . a:ArgLead
-  for m in s:cmake_commands
+  for m in s:getCompletionList('commands')
     let w = m['word']
     if w =~ match
       call add(result, w)
@@ -354,18 +371,6 @@ function cmakecomplete#HelpComplete(ArgLead, CmdLine, CursorPos)
   endfor
   return result
 endfunction
-
-if cmakecomplete#Version() =~ "^2\."
-call cmakecomplete#Init('commands', s:cmake_commands, 1)
-call cmakecomplete#Init('properties', s:cmake_properties, 0)
-call cmakecomplete#Init('modules', s:cmake_modules, 1)
-call cmakecomplete#Init('variables', s:cmake_variables, 1)
-else
-call cmakecomplete#Init3('commands', s:cmake_commands, 1)
-call cmakecomplete#Init3('properties', s:cmake_properties, 0)
-call cmakecomplete#Init3('modules', s:cmake_modules, 1)
-call cmakecomplete#Init3('variables', s:cmake_variables, 1)
-endif
 
 let &cpo = s:keepcpo
 unlet s:keepcpo
