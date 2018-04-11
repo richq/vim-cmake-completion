@@ -79,7 +79,7 @@ function cmakecomplete#Help(...)
   setlocal noswapfile
   setlocal bufhidden=delete
   silent 0put=output
-  let &filetype = 'help'
+  let &filetype = 'rst'
   setlocal nomodifiable
   0
 endfunction
